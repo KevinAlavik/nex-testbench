@@ -1,4 +1,3 @@
-
 #include "framebuffer.h"
 #include "nighterm.h"
 #include <SDL2/SDL.h>
@@ -42,10 +41,6 @@ int main() {
   nighterm_flush(&context, 60, 55, 255);
 
   int quit = 0;
-  SDL_Texture *texture =
-      SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
-                        SDL_TEXTUREACCESS_STREAMING, fb->width, fb->height);
-
   while (!quit) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -54,13 +49,24 @@ int main() {
       }
     }
 
-    SDL_UpdateTexture(texture, NULL, fb->buffer, fb->pitch);
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    // Draw pixels directly to the renderer
+    for (int y = 0; y < fb->height; y++) {
+      for (int x = 0; x < fb->width; x++) {
+        uint32_t pixel = ((uint32_t *)fb->buffer)[x + y * fb->width];
+        uint8_t a = (pixel >> 24) & 0xff;
+        uint8_t r = (pixel >> 16) & 0xff;
+        uint8_t g = (pixel >> 8) & 0xff;
+        uint8_t b = (pixel >> 0) & 0xff;
+
+        SDL_SetRenderDrawColor(renderer, r, g, b, a);
+        SDL_RenderDrawPoint(renderer, x, y);
+      }
+    }
+
     SDL_RenderPresent(renderer);
   }
 
-  SDL_DestroyTexture(texture);
+  SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
   return 0;
