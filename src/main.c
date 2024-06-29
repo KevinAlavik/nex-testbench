@@ -72,11 +72,24 @@ int main() {
         quit = 1;
       }
     }
+
+    // Draw pixels directly to the renderer
+    for (int y = 0; y < fb->height; y++) {
+      for (int x = 0; x < fb->width; x++) {
+        uint32_t pixel = ((uint32_t *)fb->buffer)[x + y * fb->width];
+        uint8_t a = (pixel >> 24) & 0xff;
+        uint8_t r = (pixel >> 16) & 0xff;
+        uint8_t g = (pixel >> 8) & 0xff;
+        uint8_t b = (pixel >> 0) & 0xff;
+
+        SDL_SetRenderDrawColor(renderer, r, g, b, a);
+        SDL_RenderDrawPoint(renderer, x, y);
+      }
+    }
+
+    SDL_RenderPresent(renderer);
   }
 
-  // Clean up
-  nighterm_shutdown(&context);
-  destroy_framebuffer(fb);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
